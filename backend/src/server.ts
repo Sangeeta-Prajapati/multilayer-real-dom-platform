@@ -9,6 +9,7 @@ import { handleCheckoutRequest } from './controllers/checkout.controller';
 import { getInventoryList } from './controllers/inventory.controller';
 import { setupRoomSocket } from './sockets/room.socket';
 import { setupRedisSubscriber } from './sockets/redisSubscriber';
+import { haggleProcessorService } from './services/haggleProcessor.service';
 
 dotenv.config();
 
