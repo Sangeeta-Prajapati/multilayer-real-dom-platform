@@ -1,0 +1,32 @@
+{
+  "deal_rooms": [
+    {
+      "room_id": "ROOM-9001",
+      "active_users": ["U-101", "U-102"],
+      "shared_cart": []
+    }
+  ],
+  "inventory": [
+    {
+      "product_id": "PRD-01",
+      "name": "Titanium Pro Laptop",
+      "description": "High-performance workstation.",
+      "base_price": 1200.00,
+      "stock_quantity": 4
+    },
+    {
+      "product_id": "PRD-02",
+      "name": "Wireless Ergonomic Mouse",
+      "description": "Reduces wrist strain during long sessions.",
+      "base_price": 85.00,
+      "stock_quantity": 50
+    },
+    {
+      "product_id": "PRD-03",
+      "name": "4K Ultra-Wide Monitor",
+      "description": "34-inch curved display.",
+      "base_price": 450.00,
+      "stock_quantity": 1
+    }
+  ]
+}
