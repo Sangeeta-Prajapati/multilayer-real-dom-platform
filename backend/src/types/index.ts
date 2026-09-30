@@ -48,6 +48,7 @@ export interface CheckoutResult {
   orderId?: string;
   winnerUser?: string;
   message: string;
+  inventory?: Product[];
   details?: {
     inventoryDeducted: string[];
     paymentProcessedOnce: boolean;

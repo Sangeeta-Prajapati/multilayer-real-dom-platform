@@ -29,6 +29,13 @@ export class CheckoutService {
     try {
       const room = database.getOrCreateRoom(roomId);
 
+      if (room.shared_cart.length === 0) {
+        return {
+          success: false,
+          message: 'Cannot checkout an empty shared cart. Please add items to the cart first.',
+        };
+      }
+
       if (room.checked_out) {
         return {
           success: false,
@@ -38,13 +45,6 @@ export class CheckoutService {
             paymentProcessedOnce: true,
             concurrencyProtected: true,
           },
-        };
-      }
-
-      if (room.shared_cart.length === 0) {
-        return {
-          success: false,
-          message: 'Cannot checkout an empty shared cart.',
         };
       }
 
@@ -97,6 +97,7 @@ export class CheckoutService {
         success: true,
         orderId,
         winnerUser: userId,
+        inventory: database.getInventory(),
         message: `Order ${orderId} processed successfully by ${userId}. Inventory deducted once, payment processed once.`,
         details: {
           inventoryDeducted: deductedItems,

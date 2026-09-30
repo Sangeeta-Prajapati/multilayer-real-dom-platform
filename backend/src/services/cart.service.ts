@@ -9,6 +9,8 @@ export class CartService {
 
   public addToCart(roomId: string, productId: string, userId: string): CartItem[] {
     const room = database.getOrCreateRoom(roomId);
+    room.checked_out = false;
+    room.order_id = undefined;
     const product = database.getProduct(productId);
     if (!product) {
       throw new Error(`Product ${productId} not found`);

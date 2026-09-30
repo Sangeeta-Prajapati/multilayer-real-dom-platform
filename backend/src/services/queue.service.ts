@@ -39,26 +39,17 @@ export class QueueService {
     const jobId = `haggle-${data.roomId}-${Date.now()}`;
     let pushedToRedis = false;
 
-    if (this.haggleQueue && (redis.status === 'ready' || redis.status === 'connect')) {
+    if (this.haggleQueue && redis.status === 'ready') {
       try {
-        await this.haggleQueue.add('process-haggle', data, { jobId });
+        await Promise.race([
+          this.haggleQueue.add('process-haggle', data, { jobId }),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Queue timeout')), 1200)),
+        ]);
         console.log(`[QueueService] Offloaded chat message to Redis BullMQ queue. Job ID: ${jobId}`);
         pushedToRedis = true;
         return jobId;
       } catch (err: any) {
-        console.warn('[QueueService] BullMQ push failed, falling back to direct Redis list:', err.message);
-      }
-    }
-
-    if (!pushedToRedis) {
-      // Direct Redis LPUSH fallback
-      try {
-        if (redis.status === 'ready' || redis.status === 'connect') {
-          await redis.lpush('raw-haggle-queue', JSON.stringify({ jobId, ...data }));
-          pushedToRedis = true;
-        }
-      } catch (e: any) {
-        console.warn('[QueueService] Raw Redis push failed:', e.message);
+        console.warn('[QueueService] BullMQ push timed out or failed, falling back to direct processor:', err.message);
       }
     }
 

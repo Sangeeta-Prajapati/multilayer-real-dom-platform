@@ -47,6 +47,10 @@ export class DatabaseStore {
   public updateCart(roomId: string, cart: CartItem[]): DealRoom {
     const room = this.getOrCreateRoom(roomId);
     room.shared_cart = cart;
+    if (cart.length > 0) {
+      room.checked_out = false;
+      room.order_id = undefined;
+    }
     return room;
   }
 

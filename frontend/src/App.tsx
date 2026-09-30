@@ -167,6 +167,9 @@ export const App: React.FC = () => {
     socket.on('checkout_complete', (data) => {
       setIsProcessingCheckout(false);
       setSharedCart([]);
+      if (data.inventory && data.inventory.length > 0) {
+        setProducts(data.inventory);
+      }
       setCheckoutResult({
         success: true,
         orderId: data.orderId,

@@ -24,6 +24,7 @@ export const handleCheckoutRequest = async (req: Request, res: Response) => {
     winnerUser: result.winnerUser,
     details: result.details,
     sharedCart: [],
+    inventory: result.inventory,
   });
 
   return res.status(200).json(result);

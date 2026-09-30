@@ -80,16 +80,14 @@ export class HaggleProcessorService {
 
       const payloadStr = JSON.stringify(streamChunk);
 
-      // Publish to Redis pub/sub
-      try {
-        await redisPublisher.publish('dealroom:stream', payloadStr);
-        await redisPublisher.publish(`room:${roomId}:stream`, payloadStr);
-      } catch (e: any) {
-        // Fallback to direct WebSocket broadcast
-      }
-
-      // Direct WebSocket emit ensures clients receive stream even if Redis pub/sub is slow
+      // 1. Direct WebSocket emit ensures clients receive stream instantly without delay
       broadcastToRoom(roomId, 'ai_stream_chunk', streamChunk);
+
+      // 2. Publish to Redis pub/sub asynchronously if connected
+      if (redisPublisher.status === 'ready') {
+        redisPublisher.publish('dealroom:stream', payloadStr).catch(() => {});
+        redisPublisher.publish(`room:${roomId}:stream`, payloadStr).catch(() => {});
+      }
 
       if (isFinal) {
         database.addChatMessage(roomId, {
@@ -122,23 +120,20 @@ export class HaggleProcessorService {
 
       database.setOffer(roomId, offer);
 
-      // Set Redis TTL key (Challenge 3: Redis SETEX room:ROOM-9001:offer 180)
-      try {
-        await redis.setex(`room:${roomId}:offer`, durationSeconds, 'ACTIVE');
-        await redis.setex(`offer:${roomId}:${offerId}`, durationSeconds, 'ACTIVE');
-      } catch (err: any) {
-        console.warn('[HaggleProcessor] Redis TTL set warning:', err.message);
-      }
-
-      // Broadcast offer to room
+      // Broadcast offer to room via WebSocket immediately
       const offerPayload = { roomId, offer };
-      try {
-        await redisPublisher.publish('dealroom:offer', JSON.stringify(offerPayload));
-        await redisPublisher.publish(`room:${roomId}:offer`, JSON.stringify(offerPayload));
-      } catch (e) {}
-
       broadcastToRoom(roomId, 'offer_generated', offerPayload);
       console.log(`[HaggleProcessor] Exploding Offer ${offer.code} created for Room ${roomId} with 3-minute TTL.`);
+
+      // Set Redis TTL key (Challenge 3: Redis SETEX room:ROOM-9001:offer 180) asynchronously
+      if (redis.status === 'ready') {
+        redis.setex(`room:${roomId}:offer`, durationSeconds, 'ACTIVE').catch(() => {});
+        redis.setex(`offer:${roomId}:${offerId}`, durationSeconds, 'ACTIVE').catch(() => {});
+      }
+      if (redisPublisher.status === 'ready') {
+        redisPublisher.publish('dealroom:offer', JSON.stringify(offerPayload)).catch(() => {});
+        redisPublisher.publish(`room:${roomId}:offer`, JSON.stringify(offerPayload)).catch(() => {});
+      }
 
       // Autonomous server-side 180s timer
       if (this.activeOfferTimers.has(roomId)) {

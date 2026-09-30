@@ -163,6 +163,7 @@ export function setupRoomSocket(io: SocketIOServer) {
           winnerUser: result.winnerUser,
           details: result.details,
           sharedCart: [],
+          inventory: result.inventory || database.getInventory(),
         });
       }
 
