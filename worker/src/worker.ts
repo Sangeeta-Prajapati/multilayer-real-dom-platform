@@ -1,3 +1,4 @@
+import http from 'http';
 import { Worker, Job } from 'bullmq';
 import { createRedisClient, redisClient } from './config/redis';
 import { processHaggleJob, HaggleJobPayload } from './processors/haggle.processor';
@@ -53,5 +54,17 @@ async function startRawQueuePoller() {
 }
 
 startRawQueuePoller();
+
+// 3. Lightweight HTTP healthcheck server
+// Allows free-tier cloud platforms (like Render Free Web Service) to host the worker with zero cost
+const PORT = parseInt(process.env.PORT || '4001', 10);
+const healthServer = http.createServer((_req, res) => {
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ status: 'ok', service: 'dealroom-worker', time: new Date().toISOString() }));
+});
+
+healthServer.listen(PORT, () => {
+  console.log(`[Worker] Healthcheck server listening on port ${PORT}`);
+});
 
 console.log('[Worker] Background worker actively waiting for negotiation jobs...');
